@@ -1,8 +1,16 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+interface User {
+  id: number;
+  username: string;
+  role: string;
+  isSellerApproved: boolean;
+  hasMechanicShop: boolean;
+  profile_completed?: boolean;
+}
 
 interface AuthState {
   token: string | null;
-  user: { id: number; username: string; role: string; isSellerApproved: boolean; hasMechanicShop: boolean } | null;
+  user: User | null;
 }
 
 const initialState: AuthState = {
@@ -14,7 +22,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setAuth: (state, action: PayloadAction<{ token: string; user: any }>) => {
+    setAuth: (state, action: PayloadAction<{ token: string; user: User }>) => {
       state.token = action.payload.token;
       state.user = action.payload.user;
     },

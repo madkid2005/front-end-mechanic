@@ -5,10 +5,10 @@ import { useDispatch } from 'react-redux';
 import { authApi, setAuthToken } from '../../../lib/api';
 import { setAuth } from '../../../lib/authSlice';
 import { useRouter } from 'next/navigation';
-import { FaUserCog, FaKey, FaMobileAlt, FaShieldAlt, FaTools } from 'react-icons/fa';
 
 export default function Login() {
   const [method, setMethod] = useState<'national' | 'totp'>('national');
+  const [step, setStep] = useState(1); // For TOTP method: Step 1: Phone number, Step 2: TOTP
   const [nationalCode, setNationalCode] = useState('');
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -16,11 +16,24 @@ export default function Login() {
   const dispatch = useDispatch();
   const router = useRouter();
 
+  const handleRequestTotp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      // Request TOTP code (mock for now, backend logs it to console)
+      await authApi.post('/login/totp/', { phone_number: phoneNumber });
+      setStep(2); // Move to TOTP input step
+    } catch (error) {
+      console.error('Failed to request TOTP:', error);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const endpoint = method === 'national' ? '/login/national/' : '/login/totp/';
-      const data = method === 'national' ? { national_code: nationalCode, password } : { phone_number: phoneNumber, totp_code: totpCode };
+      const data = method === 'national'
+        ? { national_code: nationalCode, password }
+        : { phone_number: phoneNumber, totp_code: totpCode };
       const response = await authApi.post(endpoint, data);
       const { access, refresh } = response.data;
       setAuthToken(access);
@@ -33,94 +46,72 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-0 m-0 w-full">
-      <div className="w-full max-w-md bg-gray-800 rounded-lg shadow-xl overflow-hidden mx-4">
-        <div className="bg-red-900 py-4 px-6 flex items-center">
-          <FaTools className="text-white text-2xl mr-3" />
-          <h1 className="text-xl font-bold text-white">Mechanic Workshop Login</h1>
-        </div>
-        
-        <div className="p-6">
-          <div className="flex border-b border-gray-700 mb-6">
-            <button 
-              onClick={() => setMethod('national')} 
-              className={`flex items-center px-4 py-2 font-medium ${method === 'national' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400'}`}
-            >
-              <FaUserCog className="mr-2" />
-              Employee Login
-            </button>
-            <button 
-              onClick={() => setMethod('totp')} 
-              className={`flex items-center px-4 py-2 font-medium ${method === 'totp' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400'}`}
-            >
-              <FaMobileAlt className="mr-2" />
-              TOTP Login
-            </button>
-          </div>
-
-          <form onSubmit={handleLogin}>
-            {method === 'national' ? (
-              <div className="space-y-4">
-                <div className="relative">
-                  <FaUserCog className="absolute left-3 top-3 text-gray-500" />
-                  <input 
-                    type="text" 
-                    value={nationalCode} 
-                    onChange={e => setNationalCode(e.target.value)} 
-                    placeholder="Employee ID" 
-                    className="w-full pl-10 p-3 bg-gray-700 text-white rounded focus:ring-2 focus:ring-red-500 focus:outline-none" 
-                  />
-                </div>
-                <div className="relative">
-                  <FaKey className="absolute left-3 top-3 text-gray-500" />
-                  <input 
-                    type="password" 
-                    value={password} 
-                    onChange={e => setPassword(e.target.value)} 
-                    placeholder="Password" 
-                    className="w-full pl-10 p-3 bg-gray-700 text-white rounded focus:ring-2 focus:ring-red-500 focus:outline-none" 
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="relative">
-                  <FaMobileAlt className="absolute left-3 top-3 text-gray-500" />
-                  <input 
-                    type="text" 
-                    value={phoneNumber} 
-                    onChange={e => setPhoneNumber(e.target.value)} 
-                    placeholder="Phone Number" 
-                    className="w-full pl-10 p-3 bg-gray-700 text-white rounded focus:ring-2 focus:ring-red-500 focus:outline-none" 
-                  />
-                </div>
-                <div className="relative">
-                  <FaShieldAlt className="absolute left-3 top-3 text-gray-500" />
-                  <input 
-                    type="text" 
-                    value={totpCode} 
-                    onChange={e => setTotpCode(e.target.value)} 
-                    placeholder="TOTP Code" 
-                    className="w-full pl-10 p-3 bg-gray-700 text-white rounded focus:ring-2 focus:ring-red-500 focus:outline-none" 
-                  />
-                </div>
-              </div>
-            )}
-
-            <button 
-              type="submit" 
-              className="w-full mt-6 bg-red-700 hover:bg-red-600 text-white font-bold py-3 px-4 rounded transition duration-200 flex items-center justify-center"
-            >
-              <FaTools className="mr-2" />
-              Access Workshop Dashboard
+    <div className="max-w-md mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Login</h1>
+      <div className="mb-4">
+        <button
+          onClick={() => setMethod('national')}
+          className={`px-4 py-2 ${method === 'national' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+        >
+          National Code
+        </button>
+        <button
+          onClick={() => { setMethod('totp'); setStep(1); }}
+          className={`px-4 py-2 ${method === 'totp' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+        >
+          TOTP
+        </button>
+      </div>
+      {method === 'national' ? (
+        <form onSubmit={handleLogin}>
+          <input
+            type="text"
+            value={nationalCode}
+            onChange={e => setNationalCode(e.target.value)}
+            placeholder="National Code"
+            className="w-full p-2 mb-2 border rounded"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="Password"
+            className="w-full p-2 mb-2 border rounded"
+          />
+          <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
+            Login
+          </button>
+        </form>
+      ) : (
+        step === 1 ? (
+          <form onSubmit={handleRequestTotp}>
+            <input
+              type="text"
+              value={phoneNumber}
+              onChange={e => setPhoneNumber(e.target.value)}
+              placeholder="Phone Number"
+              className="w-full p-2 mb-2 border rounded"
+            />
+            <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
+              Request TOTP Code
             </button>
           </form>
-        </div>
-
-        <div className="bg-gray-700 px-6 py-3 text-center">
-          <p className="text-gray-400 text-sm">Mechanic Shop Management System © {new Date().getFullYear()}</p>
-        </div>
-      </div>
+        ) : (
+          <form onSubmit={handleLogin}>
+            <p className="mb-2">A TOTP code has been sent to your phone number (check console for now).</p>
+            <input
+              type="text"
+              value={totpCode}
+              onChange={e => setTotpCode(e.target.value)}
+              placeholder="TOTP Code"
+              className="w-full p-2 mb-2 border rounded"
+            />
+            <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
+              Login
+            </button>
+          </form>
+        )
+      )}
     </div>
   );
 }

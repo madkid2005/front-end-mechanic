@@ -7,11 +7,11 @@ import '../styles/globals.css';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" dir='rtl'>
       <body>
         <Provider store={store}>
           <Navbar />
-          <main className="container-fluid mx-auto">{children}</main>
+          <main className="container mx-auto p-4">{children}</main>
         </Provider>
       </body>
     </html>
