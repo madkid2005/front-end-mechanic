@@ -30,21 +30,21 @@ export default function RoleBasedRegister() {
       icon: <FaUser className="text-xl" />,
       label: 'خریدار',
       description: 'خرید محصولات و خدمات',
-      apiEndpoint: '/register/buyer'
+      apiEndpoint: '/register/'
     },
     seller: {
       color: primaryColor,
       icon: <FaStore className="text-xl" />,
       label: 'فروشنده',
       description: 'ثبت و مدیریت محصولات',
-      apiEndpoint: '/register/seller'
+      apiEndpoint: '/register/'
     },
     mechanic: {
       color: primaryColor,
       icon: <FaTools className="text-xl" />,
       label: 'مکانیک',
       description: 'ارائه خدمات فنی',
-      apiEndpoint: '/register/mechanic'
+      apiEndpoint: '/register/'
     }
   };
 
@@ -55,7 +55,8 @@ export default function RoleBasedRegister() {
     
     try {
       await authApi.post(roleConfig[role].apiEndpoint, { 
-        phone_number: phoneNumber 
+        phone_number: phoneNumber,
+        role: role 
       });
       setStep(2);
     } catch (err) {
@@ -74,7 +75,9 @@ export default function RoleBasedRegister() {
     try {
       const response = await authApi.post(roleConfig[role].apiEndpoint, { 
         phone_number: phoneNumber, 
-        totp_code: totpCode
+        totp_code: totpCode,
+        role: role 
+
       });
       
       const { access, refresh } = response.data;
