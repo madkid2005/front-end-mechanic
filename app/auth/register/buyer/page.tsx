@@ -82,14 +82,11 @@ export default function RoleBasedRegister() {
       
       const { access, refresh } = response.data;
       setAuthToken(access);
+      localStorage.setItem("access",access)
       
-      const profileResponse = await authApi.get('/profile/');
-      dispatch(setAuth({ 
-        token: access, 
-        user: { ...profileResponse.data, role } 
-      }));
+
       
-      router.push(`/auth/profile/${role}`);
+      router.push(`/auth/register/buyer/profile-complate`);
     } catch (err) {
       setError('کد تایید نامعتبر است. لطفا دوباره تلاش کنید.');
       console.error('Registration failed:', err);
